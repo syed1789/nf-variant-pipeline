@@ -13,7 +13,12 @@ nextflow.enable.dsl = 2
 // ---------------------------------------------------------------------
 // Parameters (override any of these on the command line with --paramName)
 // ---------------------------------------------------------------------
-params.reads      = "$projectDir/test_data/*_R{1,2}.fastq.gz"  // paired-end FASTQs
+// Narrowed to "sample*" (was "*_R{1,2}.fastq.gz") — test_data/ now also holds
+// tumor_R*/normal_R* fastqs for somatic.nf, and the broader glob would
+// silently pull those into this single-sample germline pipeline too. Keeping
+// the "sample*" wildcard (rather than a fully literal "sample1_R{1,2}...")
+// preserves fromFilePairs' clean "sample1" id instead of "sample1_R".
+params.reads      = "$projectDir/test_data/sample*_R{1,2}.fastq.gz"  // paired-end FASTQs
 params.reference  = "$projectDir/test_data/reference.fasta"     // reference genome FASTA
 // params.outdir default lives in nextflow.config (needed there before this script runs)
 
@@ -185,10 +190,15 @@ workflow {
             [sample_id, reads]
         }
 
-    reference_ch       = Channel.fromPath(params.reference, checkIfExists: true)
+    // .first() turns these into reusable "value channels" — without that, a
+    // plain Channel.fromPath emits its one file, closes, and is exhausted
+    // after being paired with the first process invocation, so a second
+    // sample (if params.reads is ever widened to match more than one) would
+    // silently never run past the first.
+    reference_ch       = Channel.fromPath(params.reference, checkIfExists: true).first()
     reference_index_ch = Channel.fromPath("${params.reference}.{amb,ann,bwt,pac,sa}", checkIfExists: true).collect()
-    reference_dict_ch  = Channel.fromPath(params.reference.replace('.fasta', '.dict'), checkIfExists: true)
-    reference_fai_ch   = Channel.fromPath("${params.reference}.fai", checkIfExists: true)
+    reference_dict_ch  = Channel.fromPath(params.reference.replace('.fasta', '.dict'), checkIfExists: true).first()
+    reference_fai_ch   = Channel.fromPath("${params.reference}.fai", checkIfExists: true).first()
 
     BWA_MEM(read_pairs_ch, reference_ch, reference_index_ch)
     SORT_BAM(BWA_MEM.out.sam)
