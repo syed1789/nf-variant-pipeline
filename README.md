@@ -1,5 +1,7 @@
 # nf-variant-pipeline
 
+[![CI](https://github.com/syed1789/nf-variant-pipeline/actions/workflows/ci.yml/badge.svg)](https://github.com/syed1789/nf-variant-pipeline/actions/workflows/ci.yml)
+
 A minimal, real, working Nextflow DSL2 pipeline for germline short-variant calling:
 
 ```

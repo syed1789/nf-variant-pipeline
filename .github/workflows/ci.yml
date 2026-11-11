@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  shellcheck:
+    name: shellcheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Lint shell and sbatch scripts
+        run: shellcheck -S warning aws/launch_ec2.sh hpc/submit_slurm.sbatch
+
+  nextflow-config:
+    name: nextflow config parses for every profile
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Install Nextflow
+        run: |
+          curl -fsSL https://get.nextflow.io | bash
+      - name: Parse nextflow.config
+        run: |
+          ./nextflow config -profile docker > /dev/null
+          ./nextflow config -profile singularity > /dev/null
+          ./nextflow config -profile slurm > /dev/null
+          ./nextflow config -profile awsbatch > /dev/null
