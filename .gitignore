@@ -23,3 +23,5 @@ test_data/
 # Editors
 .vscode/
 .idea/
+*.sif
+logs/

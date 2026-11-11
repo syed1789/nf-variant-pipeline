@@ -132,3 +132,7 @@ something you use to optimize pipelines.
   `HaplotypeCaller` — closer to what a clinical cancer panel pipeline does
 - Split processes into `modules/` files (standard nf-core project layout)
   once the pipeline grows past a handful of processes
+
+## Running on HPC (SLURM) and AWS
+
+Includes a SLURM head-job script and a one-shot EC2 launcher (alongside the existing `slurm`/`awsbatch` profiles). See [HPC_AWS.md](HPC_AWS.md) for steps and what was verified.
