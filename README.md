@@ -70,6 +70,39 @@ docker run -v $PWD/test_data:/data biocontainers/bwa:v0.7.17_cv1 \
     bwa index /data/reference.fasta
 ```
 
+## Example run: real SARS-CoV-2 data
+
+`scripts/fetch_test_data.sh` downloads a public Illumina run (ENA
+[ERR10730304](https://www.ebi.ac.uk/ena/browser/view/ERR10730304), amplicon sequencing
+of a clinical SARS-CoV-2 isolate, 77,367 read pairs) and the Wuhan-Hu-1 reference
+(NC_045512.2), then indexes it. The whole pipeline runs in about a minute:
+
+```bash
+./scripts/fetch_test_data.sh
+nextflow run main.nf -profile docker
+python scripts/summarize_run.py      # writes example_results/
+```
+
+Results are committed in [`example_results/`](example_results/):
+
+| Metric | Value |
+|---|---|
+| Reads mapped to NC_045512.2 | 154,781 of 173,005 (89.5%) |
+| Genome covered (>=1 read, after dedup) | 98.2%, mean depth 5.5x |
+| PASS variants after bcftools filter | 14 (13 homozygous-alt, 1 het) |
+
+![Coverage and variants](example_results/coverage_variants.png)
+
+Three of the calls are the adjacent substitutions at 28881-28883 (GGG>AAC), a
+well-known signature in the nucleocapsid gene; 14408 (C>T) lies in ORF1ab (nsp12).
+Calls are listed in `variants_summary.tsv`.
+
+Caveats: amplicon data is highly duplicated by design (PERCENT_DUPLICATION 0.99), so
+MarkDuplicates removes most reads and the post-dedup depth is low; HaplotypeCaller is
+run in its default diploid mode on a haploid virus, so genotypes are 1/1 or 0/1 rather
+than true allele fractions. Treat the calls as a demonstration of the pipeline, not a
+lineage assignment.
+
 ## Running it
 
 ```bash
